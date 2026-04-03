@@ -1,27 +1,36 @@
 name: Demo sync version
 
 on:
-  push:
+  pull_request:
     branches:
       - dev
+    types:
+      - closed
     paths:
       - "src/Directory.Build.props"
+
   workflow_dispatch:
 
 jobs:
   sync:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
     runs-on: windows-latest
+
+    env:
+      SYNC_BRANCH: ${{ github.event.pull_request.base.ref || github.ref_name }}
 
     steps:
       - name: Checkout demo-common
         uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SYNC_BRANCH }}
 
       - name: Checkout demo-target
         uses: actions/checkout@v4
         with:
           repository: ${{ github.repository_owner }}/demo-target
           path: demo-target
-          ref: dev
+          ref: ${{ env.SYNC_BRANCH }}
           token: ${{ secrets.DEMO_SYNC_TOKEN }}
 
       - name: Generate demo package
@@ -41,6 +50,6 @@ jobs:
         run: |
           ./scripts/sync-common-package-version.ps1 `
             -WorkspaceRoot $env:GITHUB_WORKSPACE `
-            -Branch "dev" `
+            -Branch "${{ env.SYNC_BRANCH }}" `
             -Commit `
             -Push
