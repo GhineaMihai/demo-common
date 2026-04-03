@@ -2,6 +2,6 @@
   <PropertyGroup>
     <BaseVersion>1.0.0</BaseVersion>
     <PreReleaseSuffix>dev</PreReleaseSuffix>
-    <PreReleaseIteration>2</PreReleaseIteration>
+    <PreReleaseIteration>1</PreReleaseIteration>
   </PropertyGroup>
 </Project>
