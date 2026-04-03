@@ -1,0 +1,46 @@
+name: Demo sync version
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - "src/Directory.Build.props"
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout demo-common
+        uses: actions/checkout@v4
+
+      - name: Checkout demo-target
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/demo-target
+          path: demo-target
+          ref: dev
+          token: ${{ secrets.DEMO_SYNC_TOKEN }}
+
+      - name: Generate demo package
+        shell: pwsh
+        run: |
+          ./scripts/generate-demo-package.ps1 -WorkspaceRoot $env:GITHUB_WORKSPACE
+          Get-ChildItem ./artifacts
+
+      - name: Configure git identity
+        shell: pwsh
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Sync version to target
+        shell: pwsh
+        run: |
+          ./scripts/sync-common-package-version.ps1 `
+            -WorkspaceRoot $env:GITHUB_WORKSPACE `
+            -Branch "dev" `
+            -Commit `
+            -Push
